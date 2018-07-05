@@ -1,5 +1,11 @@
 __precompile__()
 
+
+"""
+# Module filehandling
+
+Read from and write to files and manipulate file content.
+"""
 module filehandling
 
 # Track changes during development

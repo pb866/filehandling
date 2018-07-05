@@ -14,14 +14,12 @@ Install with
 ```julia
 using Pkg
 Pkg.add("https://github.com/pb866/filehandling.git")
-Pkg.instantiate("filehandling")
 ```
 
 or in Julia go to the Package Manager by pressing `]` and type
 
 ```julia
 add "https://github.com/pb866/filehandling.git"
-instantiate
 ```
 
 # Usage
