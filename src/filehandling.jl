@@ -9,13 +9,15 @@ Read from and write to files and manipulate file content.
 module filehandling
 
 # Track changes during development
-using Revise
+# using Revise
 
 # Load Julia packages
 using DataFrames
+using Juno: input
 
 # Export functions
 export readfile,
+       test_file,
        readTUV
 
 
@@ -49,6 +51,31 @@ function readfile(ifile::String; rmhead::Int=0, rmtail::Int=0)
   # Return array with lines
   return lines
 end #function readfile
+
+
+"""
+    test_file(ifile::AbstractString; dir::AbstractString="./")
+
+Check for existance of ifile. If file doesn't exist, ask for a file name until
+file is found. If `default_dir` is specified, rdinp will look for `ifile` in this
+directory, if `ifile` does not include a folder path.
+"""
+function test_file(ifile::AbstractString; dir::AbstractString="./")
+
+  # Add default directory, if folder path in file name is missing
+  fname = basename(ifile); fdir = dirname(ifile)
+  if fdir == ""  fdir = dir  end
+  ifile = joinpath(fdir,fname)
+
+  # Test existance of file or ask for user input until file is found
+  while !isfile(ifile)
+    println("File $ifile does not exist!")
+    ifile = input("Enter file (or press <ENTER> to quit): ")
+    if ifile==""  exit()  end
+  end
+
+  return ifile
+end #function test_file
 
 
 """
@@ -113,7 +140,6 @@ function read_data(lines::Vector{String},rxns::Vector{String})
 
   # Return completed dataframe
   return jvals, sza, χ
-
 end #function read_data
 
 end #module filehandling
