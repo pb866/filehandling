@@ -58,7 +58,7 @@ Version history
 
 Version 0.1.2
 -------------
-- Exporting dictionary with entries for j values, and solar zenith angles in deg and rad as Symbols `:jvals`, `:deg`, and `:rad`, respectively
+- Returning dictionary from function `readTUV` with entries for j values, and solar zenith angles in deg and rad as Symbols `:jvals`, `:deg`, and `:rad`, respectively
 
 Version 0.1.1
 -------------
