@@ -65,7 +65,7 @@ function test_file(ifile::AbstractString; dir::AbstractString="./")
   # Add default directory, if folder path in file name is missing
   fname = basename(ifile); fdir = dirname(ifile)
   if fdir == ""  fdir = dir  end
-  ifile = joinpath(fdir,fname)
+  ifile = normpath(joinpath(fdir,fname))
 
   # Test existance of file or ask for user input until file is found
   while !isfile(ifile)
@@ -98,7 +98,7 @@ function readTUV(ifile)
     pushfirst!(rxns, "sza")
     jvals, sza, χ = read_data(lines,rxns)
   end
-  return jvals, sza, χ
+  return Dict(:jvals => jvals, :deg => sza, :rad => χ)
 end #function readTUV
 
 
