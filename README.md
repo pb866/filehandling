@@ -1,6 +1,6 @@
 # Module filehandling
 
-Current versions can read any files with the option to skip leading or 
+Current versions can read any files with the option to skip leading or
 trailing lines or read TUV 5.2 files (or version with the same format)
 and save j values to a DataFrame and solar zenith angles in deg/rad to
 arrays.
@@ -9,24 +9,28 @@ The module is designed for Julia v0.7 and higher.
 
 # Installation
 
-Install with 
+Install with
 
 ```julia
 using Pkg
 Pkg.add("https://github.com/pb866/filehandling.git")
+Pkg.instantiate()
 ```
 
 or in Julia go to the Package Manager by pressing `]` and type
 
 ```julia
 add "https://github.com/pb866/filehandling.git"
+instantiate
 ```
 
 # Usage
 
-Import package with 
+Import package with
 
 ```julia
+using Pkg
+Pkg.activate("path/to/Project.toml")
 using filehandling
 ```
 

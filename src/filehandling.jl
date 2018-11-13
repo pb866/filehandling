@@ -65,7 +65,7 @@ function test_file(ifile::AbstractString; dir::AbstractString="./")
   # Add default directory, if folder path in file name is missing
   fname = basename(ifile); fdir = dirname(ifile)
   if fdir == ""  fdir = dir  end
-  ifile = joinpath(fdir,fname)
+  ifile = normpath(joinpath(fdir,fname))
 
   # Test existance of file or ask for user input until file is found
   while !isfile(ifile)
