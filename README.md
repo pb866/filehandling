@@ -47,3 +47,22 @@ jvals, szadeg, szarad = readTUV(file)
 ```
 
 where file is the name of the TUV output file.
+
+
+Version history
+===============
+
+Version 0.1.2
+-------------
+- readTUV return dictionary with entries `:jvals`, `:deg`/`:rad` (for solar zenith angles)
+  instead of separate variables
+  
+Version 0.1.1
+-------------
+- new function `test_file` to test the existence of a file
+
+Version 0.1.0
+-------------
+- Initial Julia package for simple file handling tasks with functions
+  - `readfile` to read numerical data from simple text files with certain formats
+  - `readTUV` to read solar zenith angles and j values from TUV files
