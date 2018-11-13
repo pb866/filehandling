@@ -1,2 +1,4 @@
 *.dat
 *.txt
+docs/site/
+docs/build/
