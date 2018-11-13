@@ -98,7 +98,7 @@ function readTUV(ifile)
     pushfirst!(rxns, "sza")
     jvals, sza, χ = read_data(lines,rxns)
   end
-  return jvals, sza, χ
+  return Dict(:jvals => jvals, :deg => sza, :rad => χ)
 end #function readTUV
 
 
