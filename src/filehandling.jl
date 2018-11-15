@@ -1,6 +1,3 @@
-__precompile__()
-
-
 """
 # Module filehandling
 
