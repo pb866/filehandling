@@ -1,6 +1,3 @@
-__precompile__()
-
-
 """
 # Module filehandling
 
@@ -14,11 +11,29 @@ module filehandling
 # Load Julia packages
 using DataFrames
 using Juno: input
+using Parameters
 
 # Export functions
 export readfile,
        test_file,
        readTUV
+
+### NEW TYPES
+@with_kw mutable struct PhotData
+  jval::DataFrame
+  order::Vector{Float64}
+  rxn::Union{Vector{SubString{String}}, Vector{String}}
+  deg::Vector{Float64}=collect(0:0.5:90)
+  rad::Vector{Float64}=collect(0:π/360:π/4)
+  O3col::Number=350
+  l::Union{Float64,Vector{Float64}}=0.
+  m::Float64=0.
+  n::Float64=0.
+  RMSE::Vector{Float64}=Float64[]
+  sigma::Vector{Float64}=Float64[]
+  R2::Vector{Float64}=Float64[]
+  fit::Vector{Any}=[]
+end
 
 
 #########################################
@@ -96,9 +111,9 @@ function readTUV(ifile)
     iend   = findfirst(occursin.("values at z", lines)) - 1
     rxns = strip.([line[7:end] for line in lines[istart:iend]])
     pushfirst!(rxns, "sza")
-    jvals, sza, χ = read_data(lines,rxns)
+    jvals, order, sza, χ = read_data(lines,rxns)
   end
-  return Dict(:jvals => jvals, :deg => sza, :rad => χ)
+  return PhotData(jvals = jvals, order = order, deg = sza, rad = χ, rxn = rxns)
 end #function readTUV
 
 
@@ -120,7 +135,7 @@ function read_data(lines::Vector{String},rxns::Vector{SubString{String}})
   istart = findfirst(occursin.("sza, deg.", lines)) + 1
   iend   = findlast(occursin.("---", lines)) - 1
   rawdata = split.(lines[istart:iend])
-  rawdata = map(x->parse.(Float64,x),rawdata)
+  rawdata = parse.(Float64, rawdata)
 
   # Arrange j values in a DataFrame with reactions as column names
   jvals = DataFrame()
@@ -138,8 +153,11 @@ function read_data(lines::Vector{String},rxns::Vector{SubString{String}})
   sza = [rawdata[j][1] for j = 1:length(rawdata)]
   χ = deepcopy(sza).*π./180.
 
+  # Derive order of magnitude
+  order = floor.(log10.(rawdata[1]))
+
   # Return completed dataframe
-  return jvals, sza, χ
+  return jvals, order, sza, χ
 end #function read_data
 
 end #module filehandling
