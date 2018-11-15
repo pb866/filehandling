@@ -58,14 +58,15 @@ Version history
 
 Version 0.1.2
 -------------
-- Exporting dictionary with entries for j values, and solar zenith angles in deg and rad as Symbols `:jvals`, `:deg`, and `:rad`, respectively
-
+- readTUV return dictionary with entries `:jvals`, `:deg`/`:rad` (for solar zenith angles)
+  instead of separate variables
+  
 Version 0.1.1
 -------------
-- New function `test_file` to test existence of a file (folder and file)
-- Added package Juno to Project.toml
+- new function `test_file` to test the existence of a file
 
 Version 0.1.0
 -------------
-- New function `readfile` to test existence of file and read contents
-- New function `readTUV` to read solar zenith angles and j values from TUV files and return a DataFrame with the j values and vectors of the szas in deg and rad
+- Initial Julia package for simple file handling tasks with functions
+  - `readfile` to read numerical data from simple text files with certain formats
+  - `readTUV` to read solar zenith angles and j values from TUV files
