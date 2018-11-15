@@ -94,7 +94,7 @@ function readTUV(ifile)
     lines = readlines(f)
     istart = findfirst(occursin.("Photolysis rate coefficients, s-1", lines)) + 1
     iend   = findfirst(occursin.("values at z", lines)) - 1
-    rxns = [line[7:end] for line in lines[istart:iend]]
+    rxns = strip.([line[7:end] for line in lines[istart:iend]])
     pushfirst!(rxns, "sza")
     jvals, sza, χ = read_data(lines,rxns)
   end
@@ -114,7 +114,7 @@ retrieve χ-dependent _j_ values and return a DataFrame with the _j_ values and
 the `rxns` as column names as well as vectors of the solar zenith angles in
 deg and rad.
 """
-function read_data(lines::Vector{String},rxns::Vector{String})
+function read_data(lines::Vector{String},rxns::Vector{SubString{String}})
 
   # Retrieve j values from TUV output
   istart = findfirst(occursin.("sza, deg.", lines)) + 1
