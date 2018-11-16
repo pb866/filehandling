@@ -56,11 +56,20 @@ where file is the name of the TUV output file.
 Version history
 ===============
 
+Version 0.2.0
+-------------
+- New mutable struct `PhotData` containing TUV calculated j values, MCM photolysis parameters and related statistical data
+- `readTUV` now returns `PhotData` rather than a dictionary
+
+Version 0.1.3
+-------------
+- Strip reactions in DataFrame header with TUV data in function readTUV
+
 Version 0.1.2
 -------------
-- readTUV return dictionary with entries `:jvals`, `:deg`/`:rad` (for solar zenith angles)
+- `readTUV` return dictionary with entries `:jvals`, `:deg`/`:rad` (for solar zenith angles)
   instead of separate variables
-  
+
 Version 0.1.1
 -------------
 - new function `test_file` to test the existence of a file
