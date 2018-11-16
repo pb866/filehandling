@@ -11,7 +11,6 @@ module filehandling
 # Load Julia packages
 using DataFrames
 using Juno: input
-using Parameters
 
 # Export functions
 export readfile,
@@ -19,20 +18,12 @@ export readfile,
        readTUV
 
 ### NEW TYPES
-@with_kw mutable struct PhotData
-  jval::DataFrame=DataFrame()
-  order::Vector{Float64}=Float64[]
-  rxn::Vector{String}=String[]
-  deg::Vector{Float64}=Float64[]
-  rad::Vector{Float64}=Float64[]
-  O3col::Number=350
-  l::Union{Vector{Float64},Vector{Vector{Float64}}}=Float64[]
-  m::Vector{Float64}=Float64[]
-  n::Vector{Float64}=Float64[]
-  RMSE::Vector{Float64}=Float64[]
-  sigma::Vector{Vector{Float64}}=Float64[]
-  R2::Vector{Float64}=Float64[]
-  fit::Vector{Any}=[]
+struct TUVdata
+  jval::DataFrame
+  order::Vector{Float64}
+  deg::Vector{Float64}
+  rad::Vector{Float64}
+  rxn::Vector{String}
 end
 
 
@@ -96,14 +87,16 @@ end #function test_file
 """
     readTUV(<TUV 5.2 input file>)
 
-Read in data from TUV (version 5.2 format) output file and save
-χ-dependent _j_ values to dataframe.
-Return arrays of solar zenith angles in deg and rad and DataFrame with _j_ values.
+Read in data from TUV (version 5.2 format) output file and save χ-dependent
+_j_ values to dataframe.
+Return immutable struct `TUVdata` with fields `jval`, `order`, `rxn`, `deg`, and `rad`
+with _j_ values, order of magnitude, reaction labels, and solar zenith angles in deg/rad,
+respectively.
 """
-function readTUV(ifile)
+function readTUV(ifile::String)
 
   # Read reactions and j values from input file
-  photdata = PhotData()
+  jvals = []; order = []; sza = []; χ = []
   open(ifile,"r") do f
     lines = readlines(f)
     istart = findfirst(occursin.("Photolysis rate coefficients, s-1", lines)) + 1
@@ -111,11 +104,10 @@ function readTUV(ifile)
     rxns = strip.([line[7:end] for line in lines[istart:iend]])
     pushfirst!(rxns, "sza")
     jvals, order, sza, χ = read_data(lines,rxns)
-    photdata = PhotData(jval = jvals, order = order, deg = sza, rad = χ,
-      rxn = string.(names(jvals)))
   end
 
-  return photdata
+  # Return immutable struct with TUV data
+  return TUVdata(jvals, order, sza, χ, string.(names(jvals)))
 end #function readTUV
 
 
