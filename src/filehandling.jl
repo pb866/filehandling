@@ -1,6 +1,3 @@
-__precompile__()
-
-
 """
 # Module filehandling
 
@@ -14,11 +11,29 @@ module filehandling
 # Load Julia packages
 using DataFrames
 using Juno: input
+using Parameters
 
 # Export functions
 export readfile,
        test_file,
        readTUV
+
+### NEW TYPES
+@with_kw mutable struct PhotData
+  jval::DataFrame=DataFrame()
+  order::Vector{Float64}=Float64[]
+  rxn::Vector{String}=String[]
+  deg::Vector{Float64}=Float64[]
+  rad::Vector{Float64}=Float64[]
+  O3col::Number=350
+  l::Union{Vector{Float64},Vector{Vector{Float64}}}=Float64[]
+  m::Vector{Float64}=Float64[]
+  n::Vector{Float64}=Float64[]
+  RMSE::Vector{Float64}=Float64[]
+  sigma::Vector{Vector{Float64}}=Float64[]
+  R2::Vector{Float64}=Float64[]
+  fit::Vector{Any}=[]
+end
 
 
 #########################################
@@ -88,17 +103,19 @@ Return arrays of solar zenith angles in deg and rad and DataFrame with _j_ value
 function readTUV(ifile)
 
   # Read reactions and j values from input file
-  jvals = []; sza = []; χ = []
-  rxns = []
+  photdata = PhotData()
   open(ifile,"r") do f
     lines = readlines(f)
     istart = findfirst(occursin.("Photolysis rate coefficients, s-1", lines)) + 1
     iend   = findfirst(occursin.("values at z", lines)) - 1
     rxns = strip.([line[7:end] for line in lines[istart:iend]])
     pushfirst!(rxns, "sza")
-    jvals, sza, χ = read_data(lines,rxns)
+    jvals, order, sza, χ = read_data(lines,rxns)
+    photdata = PhotData(jval = jvals, order = order, deg = sza, rad = χ,
+      rxn = string.(names(jvals)))
   end
-  return Dict(:jvals => jvals, :deg => sza, :rad => χ)
+
+  return photdata
 end #function readTUV
 
 
@@ -138,8 +155,11 @@ function read_data(lines::Vector{String},rxns::Vector{SubString{String}})
   sza = [rawdata[j][1] for j = 1:length(rawdata)]
   χ = deepcopy(sza).*π./180.
 
+  # Derive order of magnitude
+  order = filter(!isinf, floor.(log10.(rawdata[1])))
+
   # Return completed dataframe
-  return jvals, sza, χ
+  return jvals, order, sza, χ
 end #function read_data
 
 end #module filehandling
