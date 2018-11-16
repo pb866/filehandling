@@ -47,10 +47,10 @@ end of the file, respectively.
 To read the contents of TUV 5.2 output files use
 
 ```julia
-jvals, szadeg, szarad = readTUV(file)
+jvals = readTUV(file)
 ```
 
-where file is the name of the TUV output file.
+where file is the name of the TUV output file. Data is stored in a `mutable struct` `PhotData`, where the fields `jval` are assigned with a DataFrame with the _j_ values for every reaction using the TUV reaction labels as header, solar zenith angles are stored in the fields `deg` and `rad` in the respective units, the `order` of magnitude of each _j<sub>max</sub>_ is stored in the field order and the reaction labels are stored in the field `rxn`.
 
 
 Version history
