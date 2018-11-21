@@ -1,6 +1,3 @@
-__precompile__()
-
-
 """
 # Module filehandling
 
@@ -19,6 +16,15 @@ using Juno: input
 export readfile,
        test_file,
        readTUV
+
+### NEW TYPES
+struct TUVdata
+  jval::DataFrame
+  order::Vector{Float64}
+  deg::Vector{Float64}
+  rad::Vector{Float64}
+  rxn::Vector{String}
+end
 
 
 #########################################
@@ -65,7 +71,7 @@ function test_file(ifile::AbstractString; dir::AbstractString="./")
   # Add default directory, if folder path in file name is missing
   fname = basename(ifile); fdir = dirname(ifile)
   if fdir == ""  fdir = dir  end
-  ifile = joinpath(fdir,fname)
+  ifile = normpath(joinpath(fdir,fname))
 
   # Test existance of file or ask for user input until file is found
   while !isfile(ifile)
@@ -81,24 +87,27 @@ end #function test_file
 """
     readTUV(<TUV 5.2 input file>)
 
-Read in data from TUV (version 5.2 format) output file and save
-χ-dependent _j_ values to dataframe.
-Return arrays of solar zenith angles in deg and rad and DataFrame with _j_ values.
+Read in data from TUV (version 5.2 format) output file and save χ-dependent
+_j_ values to dataframe.
+Return immutable struct `TUVdata` with fields `jval`, `order`, `rxn`, `deg`, and `rad`
+with _j_ values, order of magnitude, reaction labels, and solar zenith angles in deg/rad,
+respectively.
 """
-function readTUV(ifile)
+function readTUV(ifile::String)
 
   # Read reactions and j values from input file
-  jvals = []; sza = []; χ = []
-  rxns = []
+  jvals = []; order = []; sza = []; χ = []
   open(ifile,"r") do f
     lines = readlines(f)
     istart = findfirst(occursin.("Photolysis rate coefficients, s-1", lines)) + 1
     iend   = findfirst(occursin.("values at z", lines)) - 1
-    rxns = [line[7:end] for line in lines[istart:iend]]
+    rxns = strip.([line[7:end] for line in lines[istart:iend]])
     pushfirst!(rxns, "sza")
-    jvals, sza, χ = read_data(lines,rxns)
+    jvals, order, sza, χ = read_data(lines,rxns)
   end
-  return Dict(:jvals => jvals, :deg => sza, :rad => χ)
+
+  # Return immutable struct with TUV data
+  return TUVdata(jvals, order, sza, χ, string.(names(jvals)))
 end #function readTUV
 
 
@@ -114,7 +123,7 @@ retrieve χ-dependent _j_ values and return a DataFrame with the _j_ values and
 the `rxns` as column names as well as vectors of the solar zenith angles in
 deg and rad.
 """
-function read_data(lines::Vector{String},rxns::Vector{String})
+function read_data(lines::Vector{String},rxns::Vector{SubString{String}})
 
   # Retrieve j values from TUV output
   istart = findfirst(occursin.("sza, deg.", lines)) + 1
@@ -138,8 +147,11 @@ function read_data(lines::Vector{String},rxns::Vector{String})
   sza = [rawdata[j][1] for j = 1:length(rawdata)]
   χ = deepcopy(sza).*π./180.
 
+  # Derive order of magnitude
+  order = filter(!isinf, floor.(log10.(rawdata[1])))
+
   # Return completed dataframe
-  return jvals, sza, χ
+  return jvals, order, sza, χ
 end #function read_data
 
 end #module filehandling
