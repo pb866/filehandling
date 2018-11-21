@@ -24,6 +24,7 @@ struct TUVdata
   deg::Vector{Float64}
   rad::Vector{Float64}
   rxn::Vector{String}
+  O3col::Number
 end
 
 
@@ -85,15 +86,16 @@ end #function test_file
 
 
 """
-    readTUV(<TUV 5.2 input file>)
+    readTUV(ifile::String, O3col::Number=350)
 
-Read in data from TUV (version 5.2 format) output file and save χ-dependent
-_j_ values to dataframe.
-Return immutable struct `TUVdata` with fields `jval`, `order`, `rxn`, `deg`, and `rad`
-with _j_ values, order of magnitude, reaction labels, and solar zenith angles in deg/rad,
-respectively.
+Read in data from TUV `ifile` (version 5.2 format) and specify `O3col` (ozone column)
+conditions and save χ-dependent _j_ values to dataframe.
+
+Return immutable struct `TUVdata` with fields `jval`, `order`, `rxn`, `deg`, `rad`,
+and `O3col` with _j_ values, order of magnitude, reaction labels, and solar zenith
+angles in deg/rad, and ozone column, respectively.
 """
-function readTUV(ifile::String)
+function readTUV(ifile::String, O3col::Number=350)
 
   # Read reactions and j values from input file
   jvals = []; order = []; sza = []; χ = []
@@ -107,7 +109,7 @@ function readTUV(ifile::String)
   end
 
   # Return immutable struct with TUV data
-  return TUVdata(jvals, order, sza, χ, string.(names(jvals)))
+  return TUVdata(jvals, order, sza, χ, string.(names(jvals)), O3col)
 end #function readTUV
 
 
