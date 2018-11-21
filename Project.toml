@@ -1,7 +1,7 @@
 name = "filehandling"
 uuid = "4b8ed5e0-8069-11e8-094b-3f5425e6acdd"
 authors = ["Peter Bräuer <pb866@york.ac.uk>"]
-version = "0.2.2-DEV"
+version = "0.2.2"
 julia = "≥0.7"
 
 [deps]
