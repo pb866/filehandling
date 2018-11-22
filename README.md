@@ -56,11 +56,18 @@ ozone column in DU as defined in the TUV run. Data is stored in a immutable
 with the _j_ values for every reaction using the TUV reaction labels as header, 
 solar zenith angles are stored in the fields `deg` and `rad` in the respective 
 units, the `order` of magnitude of each _j<sub>max</sub>_ is stored in the 
-field order and the reaction labels are stored in the field `rxn`. `O3col` is stored in a field `O3col` as defined by the input parameter.
+field order, the reaction labels are stored in the field `rxn`, and the respective
+MCM and TUV reaction numbers for `rxn` are stored in fields `mcm` and `tuv`. 
+`O3col` is stored in a field `O3col` as defined by the input parameter.
 
 
 Version history
 ===============
+
+Version 0.3.0
+-------------
+- New fields `mcm` and `tuv` in `TUVdata` with vectors of integers with the reaction numbers for the labels in `rxn`
+- Relies on the md file for reaction numbers in folder src/data/
 
 Version 0.2.3
 -------------
