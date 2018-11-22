@@ -1,4 +1,5 @@
-# Module filehandling
+Module filehandling
+===================
 
 Current versions can read any files with the option to skip leading or
 trailing lines or read TUV 5.2 files (or version with the same format)
@@ -7,7 +8,8 @@ arrays.
 
 The module is designed for Julia v0.7 and higher.
 
-# Installation
+Installation
+------------
 
 Install with
 
@@ -24,7 +26,8 @@ add "https://github.com/pb866/filehandling.git"
 instantiate
 ```
 
-# Usage
+Usage
+-----
 
 Import package with
 
@@ -43,6 +46,14 @@ content = readfile(ifile::String, rmhead=n, rmtail=m)
 where n and m are the number of line numbers to be excluded at the beginning
 end of the file, respectively.
 
+To test the existance of a file use
+
+    test_file(ifile::AbstractString; dir::AbstractString="./")
+
+where `ifile` is the file name. A folder path (relative or absolute) can either 
+be defined directly in the file name or by the keyword argument `dir`. The function
+asks for user input in case of non-existent files.
+
 
 To read the contents of TUV 5.2 output files use
 
@@ -59,6 +70,18 @@ units, the `order` of magnitude of each _j<sub>max</sub>_ is stored in the
 field order, the reaction labels are stored in the field `rxn`, and the respective
 MCM and TUV reaction numbers for `rxn` are stored in fields `mcm` and `tuv`. 
 `O3col` is stored in a field `O3col` as defined by the input parameter.
+
+Customisation
+-------------
+
+Function `readTUV` works for every file in the format of TUV 5.2, however, if you customised TUV and added reactions to the input files, you will need to ammend the md file in `src/data/` by the following information:
+```
+<MCM rxn number> | <TUV rxn number> | <TUV rxn label>
+```
+TUV number must be an integer taken from the input file column 2 to 4. MCM must be an integer as used in the MCM mechanism, which can optionally be wrapped in `J(...)`, e.g.:
+```
+  J(11021)  |   24 | CH3CHO -> CH3 + HCO
+ ```
 
 
 Version history
