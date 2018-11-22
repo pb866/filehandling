@@ -185,7 +185,6 @@ function get_photlabel(rxns::Vector{String})
   # Loop over current reactions and retrieve MCM and TUV labels
   for rxn in rxns
     i = findfirst(occursin.(rxn,labels))
-    @show i, rxn
     mcm = replace(split(labels[i], "|")[1], "J(" => "")
     mcm = replace(mcm, ")" => "")
     push!(mcmlabel, parse(Int64, mcm))
