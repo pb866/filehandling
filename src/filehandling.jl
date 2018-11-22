@@ -35,6 +35,8 @@ struct TUVdata
   deg::Vector{Float64}
   rad::Vector{Float64}
   rxn::Vector{String}
+  mcm::Vector{Int64}
+  tuv::Vector{Int64}
   O3col::Number
 end
 
@@ -118,9 +120,11 @@ function readTUV(ifile::String, O3col::Number=350)
     pushfirst!(rxns, "sza")
     jvals, order, sza, χ = read_data(lines,rxns)
   end
+  mcmlabel, tuvlabel = get_photlabel(string.(names(jvals)))
 
   # Return immutable struct with TUV data
-  return TUVdata(jvals, order, sza, χ, string.(names(jvals)), O3col)
+  return TUVdata(jvals, order, sza, χ, string.(names(jvals)),
+                 mcmlabel, tuvlabel, O3col)
 end #function readTUV
 
 
@@ -166,5 +170,30 @@ function read_data(lines::Vector{String},rxns::Vector{SubString{String}})
   # Return completed dataframe
   return jvals, order, sza, χ
 end #function read_data
+
+
+"""
+    get_photlabel(rxns::Vector{String})
+
+Return MCM and TUV reaction numbers for the reactions defined in the vector `rxns`
+using TUV reaction labels.
+"""
+function get_photlabel(rxns::Vector{String})
+  # Read reactions and label from wiki md file
+  labels = readfile(joinpath(@__DIR__, "data/Photolysis-reaction-numbers.md"))
+  tuvlabel = []; mcmlabel = []
+  # Loop over current reactions and retrieve MCM and TUV labels
+  for rxn in rxns
+    i = findfirst(occursin.(rxn,labels))
+    @show i, rxn
+    mcm = replace(split(labels[i], "|")[1], "J(" => "")
+    mcm = replace(mcm, ")" => "")
+    push!(mcmlabel, parse(Int64, mcm))
+    push!(tuvlabel, parse(Int64, split(labels[i], "|")[2]))
+  end
+
+  # Return labels as integers
+  return mcmlabel, tuvlabel
+end #function get_photlabel
 
 end #module filehandling
