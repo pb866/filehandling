@@ -62,6 +62,10 @@ field order and the reaction labels are stored in the field `rxn`. `O3col` is st
 Version history
 ===============
 
+Version 0.2.3
+-------------
+- Field `order` in struct `TUVdata` is now a vector of integers
+
 Version 0.2.2
 -------------
 - Added field `O3col` of type `Number` to `TUVdata` to specify ozone column conditions in TUV runs with a new input parameter for function `readTUV` (default: `350`)

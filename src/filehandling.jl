@@ -18,9 +18,20 @@ export readfile,
        readTUV
 
 ### NEW TYPES
+"""
+    struct TUVdata
+
+`TUVdata` has the following fields:
+- `jval::DataFrame`: DataFrame with _j_ values and reaction labels as headers
+- `order::Vector{Float64}`: order of magnitude of the maximum _j_ value in every reaction
+- `deg::Vector{Float64}`: Vector of solar zenith angles of output in deg
+- `rad::Vector{Float64}`: Vector of solar zenith angles of output in rad
+- `rxn::Vector{String}`: Vector of strings with reaction labels from `jval` headers
+- `  O3col::Number`: Overlying ozone column value in DU from TUV run as defined by function `readTUV`
+"""
 struct TUVdata
   jval::DataFrame
-  order::Vector{Float64}
+  order::Vector{Int64}
   deg::Vector{Float64}
   rad::Vector{Float64}
   rxn::Vector{String}
