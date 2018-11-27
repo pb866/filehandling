@@ -11,6 +11,7 @@ module filehandling
 # Load Julia packages
 using DataFrames
 using Juno: input
+using Dates
 
 # Export functions
 export read_data,
@@ -18,12 +19,33 @@ export read_data,
        test_file,
        readTUV
 
+### NEW TYPES
+"""
+    struct TUVdata
+
+`TUVdata` has the following fields:
+- `jval::DataFrame`: DataFrame with _j_ values and reaction labels as headers
+- `order::Vector{Float64}`: order of magnitude of the maximum _j_ value in every reaction
+- `deg::Vector{Float64}`: Vector of solar zenith angles of output in deg
+- `rad::Vector{Float64}`: Vector of solar zenith angles of output in rad
+- `rxn::Vector{String}`: Vector of strings with reaction labels from `jval` headers
+- `  O3col::Number`: Overlying ozone column value in DU from TUV run as defined by function `readTUV`
+"""
+struct TUVdata
+  jval::DataFrame
+  order::Vector{Int64}
+  deg::Vector{Float64}
+  rad::Vector{Float64}
+  rxn::Vector{String}
+  mcm::Vector{Int64}
+  tuv::Vector{Int64}
+  O3col::Number
+end
+
 
 #########################################
 ###  P U B L I C   F U N C T I O N S  ###
 #########################################
-
-
 
 """
     read_data(ifile; \\*\\*kwargs)
@@ -77,7 +99,7 @@ file format or the selection of data.
   at the end of a file. If a string or regex expression is used, all lines
   starting from the first instance are ignored.
 - `comment` (`String = "#"`): String that defines in-line and line comments
-- `err` (Union{Float64,String,Missing,Vector{Any}}): Specify default values for
+- `err` (Union{Int64,Float64,String,Missing,Vector{Any}}): Specify default values for
   missing data or data that cannot be converted to a data type (can include a `Number`,
   `NaN`, `missing`). By default, `Int` and `Float` columns use `NaN` and are always
   return as `Float64`, `DateTime` uses `DateTime(0)`. If no value could be converted
@@ -94,7 +116,7 @@ function read_data(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}
   SF=1, SFx=1, SFy=1, sep::String="", colfill::String="last", ncols::Int64=0,
   header::Int64 = 0, headerskip::Union{Int64,String,Regex}=0,
   footerskip::Union{Int64,String,Regex}=0, comment::String="#",
-  err::Union{Float64,String,Missing,Vector{Any}}="",
+  err::Union{Int64,Float64,String,Missing,Vector{Any}}="",
   coltypes::Union{DataType,Vector{DataType}}=DataType[], colnames::Vector{String}=String[])
 
   # initialise
@@ -264,6 +286,7 @@ function read_data(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}
   return output
 end #function read_data
 
+
 """
     readfile(ifile::String; rmhead::Int=0, rmtail::Int=0)
 
@@ -318,56 +341,38 @@ end #function test_file
 
 
 """
-    readTUV(<TUV 5.2 input file>)
+    readTUV(ifile::String, O3col::Number=350)
 
-Read in data from TUV (version 5.2 format) output file and save
-χ-dependent _j_ values to dataframe.
-Return arrays of solar zenith angles in deg and rad and DataFrame with _j_ values.
+Read in data from TUV `ifile` (version 5.2 format) and specify `O3col` (ozone column)
+conditions and save χ-dependent _j_ values to dataframe.
+
+Return immutable struct `TUVdata` with fields `jval`, `order`, `rxn`, `deg`, `rad`,
+and `O3col` with _j_ values, order of magnitude, reaction labels, and solar zenith
+angles in deg/rad, and ozone column, respectively.
 """
-function readTUV(ifile)
+function readTUV(ifile::String, O3col::Number=350)
 
   # Read reactions and j values from input file
-  jvals = []; sza = []; χ = []
-  rxns = []
+  jvals = []; order = []; sza = []; χ = []
   open(ifile,"r") do f
     lines = readlines(f)
     istart = findfirst(occursin.("Photolysis rate coefficients, s-1", lines)) + 1
     iend   = findfirst(occursin.("values at z", lines)) - 1
     rxns = strip.([line[7:end] for line in lines[istart:iend]])
     pushfirst!(rxns, "sza")
-    jvals, sza, χ = read_data(lines,rxns)
+    jvals, order, sza, χ = read_jvals(lines,rxns)
   end
-  return Dict(:jvals => jvals, :deg => sza, :rad => χ)
+  mcmlabel, tuvlabel = get_photlabel(string.(names(jvals)))
+
+  # Return immutable struct with TUV data
+  return TUVdata(jvals, order, sza, χ, string.(names(jvals)),
+                 mcmlabel, tuvlabel, O3col)
 end #function readTUV
 
 
 ###########################################
 ###  P R I V A T E   F U N C T I O N S  ###
 ###########################################
-
-
-"""
-    get_photlabel(rxns::Vector{String})
-
-Return MCM and TUV reaction numbers for the reactions defined in the vector `rxns`
-using TUV reaction labels.
-"""
-function get_photlabel(rxns::Vector{String})
-  # Read reactions and label from wiki md file
-  labels = readfile(joinpath(@__DIR__, "data/Photolysis-reaction-numbers.md"))
-  tuvlabel = []; mcmlabel = []
-  # Loop over current reactions and retrieve MCM and TUV labels
-  for rxn in rxns
-    i = findfirst(occursin.(rxn,labels))
-    mcm = replace(split(labels[i], "|")[1], "J(" => "")
-    mcm = replace(mcm, ")" => "")
-    push!(mcmlabel, parse(Int64, mcm))
-    push!(tuvlabel, parse(Int64, split(labels[i], "|")[2]))
-  end
-
-  # Return labels as integers
-  return mcmlabel, tuvlabel
-end #function get_photlabel
 
 
 """
@@ -409,5 +414,69 @@ function convert_exceptions(col, err)
 
   return col
 end #function convert_exceptions
+
+
+"""
+    read_jvals(lines::Vector{String},rxns::Vector{String})
+
+From the `lines` of the TUV output and a list of the reactions (`rxns`),
+retrieve χ-dependent _j_ values and return a DataFrame with the _j_ values and
+the `rxns` as column names as well as vectors of the solar zenith angles in
+deg and rad.
+"""
+function read_jvals(lines::Vector{String},rxns::Vector{SubString{String}})
+
+  # Retrieve j values from TUV output
+  istart = findfirst(occursin.("sza, deg.", lines)) + 1
+  iend   = findlast(occursin.("---", lines)) - 1
+  rawdata = split.(lines[istart:iend])
+  rawdata = map(x->parse.(Float64,x),rawdata)
+
+  # Arrange j values in a DataFrame with reactions as column names
+  jvals = DataFrame()
+  for i = 2:length(rxns)
+    if rawdata[1][i] > 0.
+      # Pack j values into a DataFrame
+      jvals[Symbol(rxns[i])] = [rawdata[j][i] for j = 1:length(rawdata)]
+    else
+      # Exclude data without values above 0
+      println("\033[95mReaction with no data skipped:\033[0m")
+      println(rxns[i])
+    end
+  end
+  # Save solar zenith angles in deg and rad
+  sza = [rawdata[j][1] for j = 1:length(rawdata)]
+  χ = deepcopy(sza).*π./180.
+
+  # Derive order of magnitude
+  order = filter(!isinf, floor.(log10.(rawdata[1])))
+
+  # Return completed dataframe
+  return jvals, order, sza, χ
+end #function read_jvals
+
+
+"""
+    get_photlabel(rxns::Vector{String})
+
+Return MCM and TUV reaction numbers for the reactions defined in the vector `rxns`
+using TUV reaction labels.
+"""
+function get_photlabel(rxns::Vector{String})
+  # Read reactions and label from wiki md file
+  labels = readfile(joinpath(@__DIR__, "data/Photolysis-reaction-numbers.md"))
+  tuvlabel = []; mcmlabel = []
+  # Loop over current reactions and retrieve MCM and TUV labels
+  for rxn in rxns
+    i = findfirst(occursin.(rxn,labels))
+    mcm = replace(split(labels[i], "|")[1], "J(" => "")
+    mcm = replace(mcm, ")" => "")
+    push!(mcmlabel, parse(Int64, mcm))
+    push!(tuvlabel, parse(Int64, split(labels[i], "|")[2]))
+  end
+
+  # Return labels as integers
+  return mcmlabel, tuvlabel
+end #function get_photlabel
 
 end #module filehandling
