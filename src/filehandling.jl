@@ -157,8 +157,7 @@ function read_data(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}
       # retrieve header names
       colnames = replace(lines[ihead], Regex("^$comment") => "")
       colnames = strip(replace(colnames, Regex("$comment.*") => ""))
-      colnames = strip(replace(colnames,r",|;|\|" => " "))
-      colnames = strip.(split(colnames))
+      sep == "" ? colnames = strip.(split(colnames)) : colnames = strip.(split(colnames, sep))
       if header ≥ 0 && ihead ≤ length(lines)-footerskip  deleteat!(lines, ihead)  end
     elseif isempty(colnames)
       colnames = Vector{String}(undef, ncols)
@@ -188,7 +187,7 @@ function read_data(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}
     elseif length(colnames) > ncols
       println("WARNING! Number of column names does not fit ncol.")
       println("The last $(length(colnames)-ncols) column names are ignored.")
-      lcolnames = colnames[1:ncols]
+      colnames = colnames[1:ncols]
     end
 
     # Skip last lines of a file, if skip_footer is set to integer > 0
