@@ -163,6 +163,12 @@ TUV number must be an integer taken from the input file column 2 to 4. MCM must 
 Version history
 ===============
 
+Version 0.4.1
+-------------
+- Don't use separate splitting rules for column names to allow spaces in header
+  names and avoid duplicates or unwanted results in column names
+- Bug fix
+
 Version 0.4.0
 -------------
 - New Function `read_data` to load data from a text file into a `DataFrame` and convert numbers and dates to their respective types (taken from module pyp: https://github.com/pb866/pyp.git)
