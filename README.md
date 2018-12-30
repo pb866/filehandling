@@ -157,7 +157,7 @@ Function `readTUV` works for every file in the format of TUV 5.2, however, if yo
 TUV number must be an integer taken from the input file column 2 to 4. MCM must be an integer as used in the MCM mechanism, which can optionally be wrapped in `J(...)`, e.g.:
 ```
   J(11021)  |   24 | CH3CHO -> CH3 + HCO
- ```
+```
 
 
 Version history
