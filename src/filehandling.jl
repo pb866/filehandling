@@ -14,9 +14,9 @@ using Juno: input
 using Dates
 
 # Export functions
-export read_data,
+export loadfile,
        readfile,
-       test_file,
+       filetest,
        readTUV,
        TUVdata
 

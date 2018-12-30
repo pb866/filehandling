@@ -27,13 +27,13 @@ end #function readfile
 
 
 """
-    test_file(ifile::AbstractString; dir::AbstractString="./")
+    filetest(ifile::AbstractString; dir::AbstractString="./")
 
 Check for existance of ifile. If file doesn't exist, ask for a file name until
 file is found. If `default_dir` is specified, rdinp will look for `ifile` in this
 directory, if `ifile` does not include a folder path.
 """
-function test_file(ifile::AbstractString; dir::AbstractString="./")
+function filetest(ifile::AbstractString; dir::AbstractString="./")
 
   # Add default directory, if folder path in file name is missing
   fname = basename(ifile); fdir = dirname(ifile)
@@ -48,11 +48,11 @@ function test_file(ifile::AbstractString; dir::AbstractString="./")
   end
 
   return ifile
-end #function test_file
+end #function filetest
 
 
 """
-    read_data(ifile; \\*\\*kwargs)
+    loadfile(ifile; \\*\\*kwargs)
 
 
 Read data from text file `ifile`.
@@ -108,7 +108,7 @@ file format or the selection of data.
   `NaN`, `missing`). By default, `Int` and `Float` columns use `NaN` and are always
   return as `Float64`, `DateTime` uses `DateTime(0)`. If no value could be converted
   in a column a `String` vector is return, to allow text columns by default.
-- `coltypes` (`Union{DataType,Vector{DataType}}`): If specified, `read_data` tries to
+- `coltypes` (`Union{DataType,Vector{DataType}}`): If specified, `loadfile` tries to
   convert each column into the specified type, on failure the default or specified
   `err` values are used. Either use `Vector{DataType}` for each column or `DataType`
   for a global value. (If errors are encountered in the data, 64 bit data types will
@@ -122,7 +122,7 @@ file format or the selection of data.
   as default, but a sequence cannot be started with a single quote and ended with a
   double quote or vice versa.
 """
-function read_data(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=1,
+function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=1,
   SF=1, SFx=1, SFy=1, colfill::String="last", ncols::Int64=0, sep::String="",
   escchar::Union{Char,String,Vector{Char},Vector{String}}=['\"', '\''],
   header::Int64 = 0, headerskip::Union{Int64,String,Regex}=0,
@@ -131,7 +131,7 @@ function read_data(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}
   coltypes::Union{DataType,Vector{DataType}}=DataType[], colnames::Vector{String}=String[])
 
   # initialise
-  ifile = test_file(ifile, dir = dir) # check existence of file
+  ifile = filetest(ifile, dir = dir) # check existence of file
   lines = String[]; y = Int64[]
   if x == 0  x = Int64[]  end
 
@@ -296,7 +296,7 @@ function read_data(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}
 
   # Return file data as DataFrame
   return output
-end #function read_data
+end #function loadfile
 
 
 """
