@@ -413,7 +413,7 @@ function convert_exceptions(col, err)
     # Loop over data
     for (i, dat) in enumerate(col)
       # Convert data or use default error data
-      try elem = parse(type, dat)
+      try elem = parse(type, strip(dat))
         revcol[i] = elem
       catch
         # Use different default values for different data types, if err is not defined
