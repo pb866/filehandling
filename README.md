@@ -3,7 +3,7 @@ Module filehandling
 
 Current versions can read any files with the option to skip leading or
 trailing lines or read TUV 5.2 files (or version with the same format)
-and save j values to a DataFrame and solar zenith angles in deg/rad to
+and save _j_ values to a DataFrame and solar zenith angles in deg/rad to
 arrays.
 
 The module is designed for Julia v0.7 and higher.
@@ -30,15 +30,17 @@ using Pkg
 Pkg.activate("path/to/Project.toml")
 using filehandling
 ```
-### Function test_file
+
+
+### Function filetest
 
 To test the existence of a file use
 ```julia
-ifile = test_file(ifile::AbstractString; dir::AbstractString="./")
+ifile = filetest(ifile::AbstractString; dir::AbstractString="./")
 ```
 
 where the directory of the file can either be specified as relative or absolute
-path in the file name of `ifile` directly or in a separate keyword argument `dir`.
+path directly in the file name of `ifile` or in a separate keyword argument `dir`.
 
 
 ### Function readfile
@@ -54,9 +56,9 @@ end of the file, respectively.
 
 To test the existance of a file use
 
-### Function read_data
+### Function loadfile
 
-More complex loading of data can be performed with `read_data`, where data is stored
+More complex loading of data can be performed with `loadfile`, where data is stored
 in a `DataFrame` with columns from the file data. Numbers and dates are automatically
 converted to their respective types, and default error values can be specified for
 missing or faulty data.
@@ -157,11 +159,17 @@ Function `readTUV` works for every file in the format of TUV 5.2, however, if yo
 TUV number must be an integer taken from the input file column 2 to 4. MCM must be an integer as used in the MCM mechanism, which can optionally be wrapped in `J(...)`, e.g.:
 ```
   J(11021)  |   24 | CH3CHO -> CH3 + HCO
- ```
+```
 
 
 Version history
 ===============
+
+Version 0.5.0
+-------------
+- Rename functions (`test_file` to `filetest` and `read_data` to `loadfile`)
+- Define escape characters to ignore separators
+- Bug fixes
 
 Version 0.4.1
 -------------
