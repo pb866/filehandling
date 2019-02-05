@@ -217,7 +217,6 @@ function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=
   for (i, line) in enumerate(lines)
     # Split into columns
     raw = escstrings(line, sep, escchar)
-    println(raw)
     # sep == "" ? raw = strip.(split(line)) : raw = strip.(split(line,sep))
     # Check number of current columns against maximum number of columns
     if length(raw) > ncols
@@ -248,6 +247,10 @@ function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=
   for i = 1:ncols
     col = filedata[:,i]
     if !isempty(coltypes)
+      if coltypes[i] == String
+        output[Symbol(colnames[i])] = col
+        continue
+      end
       try col = parse.(coltypes[i], col)
       catch
         col = convert_exceptions(col, err[i])
@@ -313,8 +316,6 @@ function escstrings(dataline, sep, escchar)
   if escchar isa Vector  e = "("*join(escchar,"|")*")"  end
 
   # Return data using normal split rules, if no escape character is found
-  println()
-  println(!occursin(Regex(e), dataline),": $dataline")
   if !occursin(Regex(e), dataline) && sep == ""
     return split(dataline)
   elseif !occursin(Regex(e), dataline)
