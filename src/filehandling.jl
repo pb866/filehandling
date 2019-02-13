@@ -2,6 +2,15 @@
 # Module filehandling
 
 Read from and write to files and manipulate file content.
+
+## Public functions
+- `loadfile`
+- `readfile`
+- `filetest`
+- `readTUV`
+
+## Data types
+- `TUVdata`
 """
 module filehandling
 
@@ -10,7 +19,6 @@ module filehandling
 
 # Load Julia packages
 using DataFrames
-using Juno: input
 using Dates
 
 # Export functions
@@ -30,7 +38,9 @@ export loadfile,
 - `deg::Vector{Float64}`: Vector of solar zenith angles of output in deg
 - `rad::Vector{Float64}`: Vector of solar zenith angles of output in rad
 - `rxn::Vector{String}`: Vector of strings with reaction labels from `jval` headers
-- `  O3col::Number`: Overlying ozone column value in DU from TUV run as defined by function `readTUV`
+- `mcm::Vector{Int64}`: Vector with MCM photolysis reaction numbers
+- `tuv::Vector{Int64}`: Vector with TUV photolysis reaction numbers
+- `DU::Number`: Overlying ozone column value in DU from TUV run as defined by function `readTUV`
 """
 struct TUVdata
   jval::DataFrame
@@ -40,7 +50,7 @@ struct TUVdata
   rxn::Vector{String}
   mcm::Vector{Int64}
   tuv::Vector{Int64}
-  O3col::Number
+  DU::Number
 end
 
 include("TUV.jl")
