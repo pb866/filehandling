@@ -1,11 +1,19 @@
 """
-    readfile(ifile::String; headerskip::Int=0, footerskip::Int=0)
+    readfile(ifile::String; headerskip::Int=0, footerskip::Int=0, dir::AbstractString="./")
 
 Read content from `ifile` and return an array with its lines.
+The file directory is extracted directly from the filename or, alternatively,
+taken from the keyword argument `dir`. The current folder is assumed, if no
+directory is given.
 
 Omit first `rmhead` lines and last `rmtail` lines, if keyword arguments are specified.
 """
-function readfile(ifile::String; headerskip::Int=0, footerskip::Int=0)
+function readfile(ifile::String; headerskip::Int=0, footerskip::Int=0, dir::AbstractString="./")
+
+  # Add default directory, if folder path in file name is missing
+  fname = basename(ifile); fdir = dirname(ifile)
+  if fdir == ""  fdir = dir  end
+  ifile = normpath(joinpath(fdir,fname))
 
   lines = []
   # Read lines from file
@@ -67,7 +75,7 @@ file format or the selection of data.
 ### \\*\\*kwargs
 
 - `dir` (`String = "."`): Directory of the input file `ifile`
-  (can also be specified directly in `ifile`)
+  (can also be specified directly in `ifile`, the kwarg `dir` is ignored)
 - `x` (`Union{Int64,Vector{Int64}} = 1`): Column index for column in `ifile`
   holding the x data (default column name in output DataFrame: `x` or `xi`, i = 1...n).
   If `x` is set to `0`, no x column is assigned and only y columns are used in the DataFrame
