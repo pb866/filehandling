@@ -1,30 +1,38 @@
 """
-    readTUV(ifile::String, O3col::Number=350)
+    readTUV(ifile::String, DU::Number=350; MCMversion::Int64=4)
 
-Read in data from TUV `ifile` (version 5.2 format) and specify `O3col` (ozone column)
-conditions and save χ-dependent _j_ values to dataframe.
+Read in data from TUV `ifile` (version 5.2 format) and specify `DU` (ozone column Dobson unit)
+conditions and save χ-dependent _j_ values to dataframe. Specify the MCM version number
+to return the correct MCM reaction labels.
 
-Return immutable struct `TUVdata` with fields `jval`, `order`, `rxn`, `deg`, `rad`,
-and `O3col` with _j_ values, order of magnitude, reaction labels, and solar zenith
-angles in deg/rad, and ozone column, respectively.
+MCM version numbers:
+- `2`: MCMv3.2 or older
+- `3`: MCMv3.3.1
+- `4`: MCM/GECKO-A
+
+Return immutable struct `TUVdata` with fields `jval`, `order`, `deg`, `rad`, `rxn`,
+`mcm`, `tuv`, and `O3col` with _j_ values, order of magnitude, solar zenith angles
+in deg/rad, reaction labels, reaction numbers in the MCM and TUV, and ozone column,
+respectively.
 """
-function readTUV(ifile::String, O3col::Number=350)
+function readTUV(ifile::String; DU::Number=350, MCMversion::Int64=4)
 
   # Read reactions and j values from input file
   jvals = []; order = []; sza = []; χ = []
   open(ifile,"r") do f
     lines = readlines(f)
     istart = findfirst(occursin.("Photolysis rate coefficients, s-1", lines)) + 1
-    iend   = findfirst(occursin.("values at z", lines)) - 1
+    iend   = findlast(occursin.("values at z", lines)) - 1
     rxns = strip.([line[7:end] for line in lines[istart:iend]])
     pushfirst!(rxns, "sza")
     jvals, order, sza, χ = read_jvals(lines,rxns)
   end
-  mcmlabel, tuvlabel = get_photlabel(string.(names(jvals)))
+  mcmlabel, tuvlabel = get_photlabel(string.(names(jvals)), MCMversion)
+  if mcmlabel == nothing  return nothing  end
 
   # Return immutable struct with TUV data
   return TUVdata(jvals, order, sza, χ, string.(names(jvals)),
-                 mcmlabel, tuvlabel, O3col)
+                 mcmlabel, tuvlabel, DU)
 end #function readTUV
 
 
@@ -69,24 +77,72 @@ end #function read_jvals
 
 
 """
-    get_photlabel(rxns::Vector{String})
+    get_photlabel(rxns::Vector{String}, MCMversion::Int64)
 
 Return MCM and TUV reaction numbers for the reactions defined in the vector `rxns`
-using TUV reaction labels.
+using TUV reaction labels. The index for the `MCMversion` number is needed to assign
+the correct MCM reaction numbers.
 """
-function get_photlabel(rxns::Vector{String})
+function get_photlabel(rxns::Vector{String}, MCMversion::Int64)
   # Read reactions and label from wiki md file
-  labels = readfile(joinpath(@__DIR__, "data/Photolysis-reaction-numbers.md"))
+  if MCMversion == 2
+    inpfile = "MCMv32.db"
+  elseif MCMversion == 3
+    inpfile = "MCMv331.db"
+  elseif MCMversion == 4
+    inpfile = "MCM-GECKO-A.db"
+  else
+    println("Unknown option for `MCMversion`. Choose integer between `2` and `4`.")
+    println("Skript stopped.")
+    return nothing, nothing
+  end
+  mcm = loadfile(inpfile, dir = normpath(joinpath(@__DIR__,"../data")),
+    sep = "|", headerskip = 1)
+  mcm[end] = strip.(mcm[end])
   tuvlabel = []; mcmlabel = []
   # Loop over current reactions and retrieve MCM and TUV labels
+  tuv = getTUVrxns()
   for rxn in rxns
-    i = findfirst(occursin.(rxn,labels))
-    mcm = replace(split(labels[i], "|")[1], "J(" => "")
-    mcm = replace(mcm, ")" => "")
-    push!(mcmlabel, parse(Int64, mcm))
-    push!(tuvlabel, parse(Int64, split(labels[i], "|")[2]))
+    i = findfirst(rxn .== mcm[end])
+    j = findfirst(rxn .== tuv[end])
+    if i == nothing
+      println("Warning! Reaction not found in MCM database.")
+      println(rxn)
+      push!(mcmlabel, 0)
+    else
+      push!(mcmlabel, mcm[1][i])
+    end
+    if j == nothing
+      println("Warning! Reaction not found in TUV database.")
+      println(rxn)
+      push!(tuvlabel, 0)
+    else
+      push!(tuvlabel, tuv[1][j])
+    end
   end
 
   # Return labels as integers
   return mcmlabel, tuvlabel
 end #function get_photlabel
+
+
+"""
+    getTUVrxns()
+
+Read TUV reactions numbers from a TUV database file saved in folder `data` with
+the mechanism section from the current TUV input file.
+"""
+function getTUVrxns()
+  # Read database file
+  lines = readfile(normpath(joinpath(@__DIR__, "../data/TUVrxns.db")))
+  # Initialise
+  j = Int64[]; rxn = String[]
+  # Extract reactions and numbers from file
+  for line in lines
+    push!(j, parse(Int64, line[2:4]))
+    push!(rxn, strip(line[6:end]))
+  end
+
+  # Return a DataFrame with reactions and numbers
+  return DataFrame(j = j, rxn = rxn)
+end #function getTUVrxns

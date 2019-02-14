@@ -2,9 +2,12 @@ name = "filehandling"
 uuid = "4b8ed5e0-8069-11e8-094b-3f5425e6acdd"
 authors = ["Peter Bräuer <pb866@york.ac.uk>"]
 julia = "≥0.7"
+<<<<<<< HEAD
 version = "1.0.0-DEV"
+=======
+version = "1.0.0"
+>>>>>>> 1.0.0
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-Juno = "e5e0dc1b-0480-54bc-9374-aad01c23163d"

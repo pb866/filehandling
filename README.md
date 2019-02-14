@@ -1,12 +1,14 @@
 Module filehandling
 ===================
 
-Current versions can read any files with the option to skip leading or
-trailing lines or read TUV 5.2 files (or version with the same format)
-and save _j_ values to a DataFrame and solar zenith angles in deg/rad to
-arrays.
+Current versions can read any files with several options to skip leading or
+trailing lines and save data in columns of a `DataFrame`. Numbers can be converted
+into integers or floats. Furthermore, TUV 5.2 files (or versions with the same format)
+can be read and _j_ values saved to a `DataFrame` together with solar zenith angles
+in deg/rad in arrays all stored in a immutable struct `TUVdata`.
 
 The module is designed for Julia v0.7 and higher.
+
 
 Installation
 ------------
@@ -19,6 +21,7 @@ pkg> add https://github.com/pb866/filehandling.git
 pkg> instantiate
 pkg> precompile
 ```
+
 
 Usage
 -----
@@ -48,13 +51,15 @@ path directly in the file name of `ifile` or in a separate keyword argument `dir
 To read from a file use
 
 ```julia
-content = readfile(ifile::String, headerskip=n, footerskip=m)
+content = readfile(ifile::String, headerskip=n, footerskip=m, dir::AbstractString="./")
 ```
 
-where n and m are the number of line numbers to be excluded at the beginning
-end of the file, respectively.
+where `n` and `m` are the number of line numbers to be excluded at the beginning
+end of the file, respectively. The file directory is extracted directly from the
+filename or, alternatively, taken from the keyword argument `dir`.
+The current folder is assumed, if no directory is given.
 
-To test the existance of a file use
+To test the existence of a file use function `filetest`.
 
 ### Function loadfile
 
@@ -65,9 +70,8 @@ missing or faulty data.
 
 The following keyword arguments are available:
 
-
 - `dir` (`String = "."`): Directory of the input file `ifile`
-  (can also be specified directly in `ifile`)
+  (can also be specified directly in `ifile`, the kwarg `dir` is ignored)
 - `x` (`Union{Int64,Vector{Int64}} = 1`): Column index for column in `ifile`
   holding the x data (default column name in output DataFrame: `x` or `xi`, i = 1...n).
   If `x` is set to `0`, no x column is assigned and only y columns are used in the DataFrame
@@ -75,12 +79,6 @@ The following keyword arguments are available:
 - `SF` (default value: `1` (no scaling)): Optional scaling factor for all data.
 - `SFx` (default value: `1` (no scaling)): Optional scaling factor for x data.
 - `SFy` (default value: `1` (no scaling)): Optional scaling factor for y data.
-- `sep` (`String`, default: `whitespace`): You can specify any column separator with the
-  keyword charactar `sep`. Separators can be any unicode character (even special
-  characters such as `≠` or `α`) or string series of unicode characters
-  (including whitespace). The default splits using any number of whitespace, if you
-  want to include empty columns, you need to specify the whitespace explicitly with
-  `sep`.
 - `colfill` (`String = "last"`): If the column length of the input file varies,
   the `"first"` or `"last"` columns of the file are filled with `err` (default values)
   according to the keyword. If you have a file with shorter columns to the right and the left,
@@ -92,6 +90,18 @@ The following keyword arguments are available:
   of columns, if you have columns of different length with leading missing numbers and
   use whitespace as separator or if you want to exclude a large number of columns in
   your DataFrame.
+- `sep` (`String`, default: `whitespace`): You can specify any column separator with the
+  keyword charactar `sep`. Separators can be any unicode character (even special
+  characters such as `≠` or `α`) or string series of unicode characters
+  (including whitespace). The default splits using any number of whitespace, if you
+  want to include empty columns, you need to specify the whitespace explicitly with
+  `sep`.
+- `escchar` (`Union{Char,String,Vector{Char},Vector{String}} = ['\"', '\'']`):
+  Characters or Strings used to escape Strings (separators are ignored within matching
+  escape characters). A series of escape characters can be defined as vectors, but
+  each sequence must be matched by the same escape characters, e.g. `"` and `'` are used
+  as default, but a sequence cannot be started with a single quote and ended with a
+  double quote or vice versa.
 - `header` (`Int64 = 0`): Optional line holding header names. Default values are
   used, if set to `0`, positive values indicate the line number starting at the first
   data line (non-comment line or line after `headerskip`), negative values indicate
@@ -104,12 +114,12 @@ The following keyword arguments are available:
   at the end of a file. If a string or regex expression is used, all lines
   starting from the first instance are ignored.
 - `comment` (`String = "#"`): String that defines in-line and line comments
-- `err` (Union{Float64,String,Missing,Vector{Any}}): Specify default values for
+- `err` (Union{Int64,Float64,String,Missing,Vector{Any}}): Specify default values for
   missing data or data that cannot be converted to a data type (can include a `Number`,
   `NaN`, `missing`). By default, `Int` and `Float` columns use `NaN` and are always
   return as `Float64`, `DateTime` uses `DateTime(0)`. If no value could be converted
   in a column a `String` vector is return, to allow text columns by default.
-- `coltypes` (`Union{DataType,Vector{DataType}}`): If specified, `read_data` tries to
+- `coltypes` (`Union{DataType,Vector{DataType}}`): If specified, `loadfile` tries to
   convert each column into the specified type, on failure the default or specified
   `err` values are used. Either use `Vector{DataType}` for each column or `DataType`
   for a global value. (If errors are encountered in the data, 64 bit data types will
@@ -123,18 +133,25 @@ The following keyword arguments are available:
 To read the contents of TUV 5.2 output files use
 
 ```julia
-jvals = readTUV(ifile::String, O3col::Number=350)
+jvals = readTUV(ifile::String, DU::Number=350, MCMversion::Int64=4)
 ```
 
-where `ifile` is the name of the TUV output file and O3col is the overlying
-ozone column in DU as defined in the TUV run. Data is stored in a immutable
+where `ifile` is the name of the TUV output file and `DU` is the overlying
+ozone column in Dobson units as defined in the TUV run. Data is stored in a immutable
 `struct` `TUVdata`, where the fields `jval` are assigned with a DataFrame
 with the _j_ values for every reaction using the TUV reaction labels as header,
 solar zenith angles are stored in the fields `deg` and `rad` in the respective
 units, the `order` of magnitude of each _j<sub>max</sub>_ is stored in the
 field order, the reaction labels are stored in the field `rxn`, and the respective
-MCM and TUV reaction numbers for `rxn` are stored in fields `mcm` and `tuv`.
-`O3col` is stored in a field `O3col` as defined by the input parameter.
+MCM and TUV reaction numbers for `rxn` are stored in fields `mcm` and `tuv`. To
+assign the correct MCM reaction numbers, the `MCMversion` needs to be and can be
+inputted as:
+
+- `2`: MCMv3.2 and older
+- `3`: MCMv3.3.1
+- `4`: MCM/GECKO-A
+
+The ozone column in Dobson units is stored in a field `DU` as defined by the input parameter.
 
 ### Data struct TUVdata
 
@@ -152,18 +169,47 @@ Function `readTUV` returns a immutable struct `TUVdata` with the following field
 Customisation
 -------------
 
-Function `readTUV` works for every file in the format of TUV 5.2, however, if you customised TUV and added reactions to the input files, you will need to ammend the md file in `src/data/` by the following information:
-```
-<MCM rxn number> | <TUV rxn number> | <TUV rxn label>
-```
-TUV number must be an integer taken from the input file column 2 to 4. MCM must be an integer as used in the MCM mechanism, which can optionally be wrapped in `J(...)`, e.g.:
-```
-  J(11021)  |   24 | CH3CHO -> CH3 + HCO
-```
+Function `readTUV` works for every file in the format of TUV 5.2, however, if you
+customised TUV and added reactions to the input files, you will need to amend the
+database files in the `data` folder. They are necessary to assign TUV and MCM
+reaction numbers to the dataset.
+
+MCM database files use a pipe (`|`) as column separator, a hash sign as comment (`#`)
+and store the reaction number in the first column and the TUV reaction string
+(from the I/O files) in the last column. Database files exist for 3 MCM versions:
+
+- MCMv32.db for MCMv3.2 and older
+- MCMv331.db for the most recent MCMv3.3.1
+- MCM-GECKO-A.db for MCM/GECKO-A version, where the MCM is auto-generated with the help of GECKO-A
+
+For the older MCMv3.2 files an additional column with scaling factors exist, which is ignored in this context.rxn number> | <TUV rxn number> | <TUV rxn label>
+
+If you want to add/change reaction numbers, use the database files in the data folder
+as template and add new numbers according to the above rules. Make sure, reaction numbers
+are saved in the first and the TUV labels exactly as they are in the TUV input file
+are saved in the last column of the database file. The first line of the file is reserved
+for column headers, all other non-data lines need to be commented out with a `#`-sign.
+
+To obtain TUV numbers, a database file need to be saved to the data folder with the
+mechanism section from the TUV input file (see TUVrxns.db as template for the current TUV version).
+
+If you add files or modify file names you need to adjust the file reading in function
+`get_photlabel` for the MCM database files and `getTUVrxns` for the TUV database file
+in TUV.jl.
+
 
 
 Version history
 ===============
+
+Version 1.0.0
+-------------
+- Revised database files for MCM and TUV reaction numbers
+- Move data folder from src to main folder
+- New kwarg `MCMversion` to specify MCM version number for correct reaction numbers
+- Change kwarg `O3col` to `DU`
+- Use `readline` instead of `Atom.input`
+- Add kwarg `dir` for directory to function `readfile`
 
 Version 0.5.0
 -------------

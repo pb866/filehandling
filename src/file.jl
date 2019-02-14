@@ -1,11 +1,19 @@
 """
-    readfile(ifile::String; rmhead::Int=0, rmtail::Int=0)
+    readfile(ifile::String; headerskip::Int=0, footerskip::Int=0, dir::AbstractString="./")
 
 Read content from `ifile` and return an array with its lines.
+The file directory is extracted directly from the filename or, alternatively,
+taken from the keyword argument `dir`. The current folder is assumed, if no
+directory is given.
 
 Omit first `rmhead` lines and last `rmtail` lines, if keyword arguments are specified.
 """
-function readfile(ifile::String; headerskip::Int=0, footerskip::Int=0)
+function readfile(ifile::String; headerskip::Int=0, footerskip::Int=0, dir::AbstractString="./")
+
+  # Add default directory, if folder path in file name is missing
+  fname = basename(ifile); fdir = dirname(ifile)
+  if fdir == ""  fdir = dir  end
+  ifile = normpath(joinpath(fdir,fname))
 
   lines = []
   # Read lines from file
@@ -43,8 +51,9 @@ function filetest(ifile::AbstractString; dir::AbstractString="./")
   # Test existance of file or ask for user input until file is found
   while !isfile(ifile)
     println("File $ifile does not exist!")
-    ifile = input("Enter file (or press <ENTER> to quit): ")
-    if ifile==""  exit()  end
+    print("Enter file (or press <ENTER> to quit): ")
+    ifile = readline()
+    if ifile==""  return ""  end
   end
 
   return ifile
@@ -66,7 +75,7 @@ file format or the selection of data.
 ### \\*\\*kwargs
 
 - `dir` (`String = "."`): Directory of the input file `ifile`
-  (can also be specified directly in `ifile`)
+  (can also be specified directly in `ifile`, the kwarg `dir` is ignored)
 - `x` (`Union{Int64,Vector{Int64}} = 1`): Column index for column in `ifile`
   holding the x data (default column name in output DataFrame: `x` or `xi`, i = 1...n).
   If `x` is set to `0`, no x column is assigned and only y columns are used in the DataFrame
@@ -74,12 +83,6 @@ file format or the selection of data.
 - `SF` (default value: `1` (no scaling)): Optional scaling factor for all data.
 - `SFx` (default value: `1` (no scaling)): Optional scaling factor for x data.
 - `SFy` (default value: `1` (no scaling)): Optional scaling factor for y data.
-- `sep` (`String`, default: `whitespace`): You can specify any column separator with the
-  keyword charactar `sep`. Separators can be any unicode character (even special
-  characters such as `≠` or `α`) or string series of unicode characters
-  (including whitespace). The default splits using any number of whitespace, if you
-  want to include empty columns, you need to specify the whitespace explicitly with
-  `sep`.
 - `colfill` (`String = "last"`): If the column length of the input file varies,
   the `"first"` or `"last"` columns of the file are filled with `err` (default values)
   according to the keyword. If you have a file with shorter columns to the right and the left,
@@ -91,6 +94,18 @@ file format or the selection of data.
   of columns, if you have columns of different length with leading missing numbers and
   use whitespace as separator or if you want to exclude a large number of columns in
   your DataFrame.
+- `sep` (`String`, default: `whitespace`): You can specify any column separator with the
+  keyword charactar `sep`. Separators can be any unicode character (even special
+  characters such as `≠` or `α`) or string series of unicode characters
+  (including whitespace). The default splits using any number of whitespace, if you
+  want to include empty columns, you need to specify the whitespace explicitly with
+  `sep`.
+- `escchar` (`Union{Char,String,Vector{Char},Vector{String}} = ['\"', '\'']`):
+  Characters or Strings used to escape Strings (separators are ignored within matching
+  escape characters). A series of escape characters can be defined as vectors, but
+  each sequence must be matched by the same escape characters, e.g. `"` and `'` are used
+  as default, but a sequence cannot be started with a single quote and ended with a
+  double quote or vice versa.
 - `header` (`Int64 = 0`): Optional line holding header names. Default values are
   used, if set to `0`, positive values indicate the line number starting at the first
   data line (non-comment line or line after `headerskip`), negative values indicate
@@ -115,12 +130,6 @@ file format or the selection of data.
   automatically assigned.)
 - `colnames` (`Vector{String} = String[]`): Specify header names for the output
   dataframe directly as kwarg. Overwrites values, derived from the input file.
-- `escchar` (`Union{Char,String,Vector{Char},Vector{String}} = ['\"', '\'']`):
-  Characters or Strings used to escape Strings (separators are ignored within matching
-  escape characters). A series of escape characters can be defined as vectors, but
-  each sequence must be matched by the same escape characters, e.g. `"` and `'` are used
-  as default, but a sequence cannot be started with a single quote and ended with a
-  double quote or vice versa.
 """
 function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=1,
   SF=1, SFx=1, SFy=1, colfill::String="last", ncols::Int64=0, sep::String="",
@@ -132,6 +141,7 @@ function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=
 
   # initialise
   ifile = filetest(ifile, dir = dir) # check existence of file
+  if ifile == ""  return DataFrame()  end
   lines = String[]; y = Int64[]
   if x == 0  x = Int64[]  end
 
