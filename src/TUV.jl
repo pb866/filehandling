@@ -97,27 +97,27 @@ function get_photlabel(rxns::Vector{String}, MCMversion::Int64)
     return nothing, nothing
   end
   mcm = loadfile(inpfile, dir = normpath(joinpath(@__DIR__,"../data")),
-    sep = "|", colnames = ["j", "rxn"], headerskip = 1)
-  mcm[:rxn] = strip.(mcm[:rxn])
+    sep = "|", headerskip = 1)
+  mcm[end] = strip.(mcm[end])
   tuvlabel = []; mcmlabel = []
   # Loop over current reactions and retrieve MCM and TUV labels
   tuv = getTUVrxns()
   for rxn in rxns
-    i = findfirst(rxn .== mcm[:rxn])
-    j = findfirst(rxn .== tuv[:rxn])
+    i = findfirst(rxn .== mcm[end])
+    j = findfirst(rxn .== tuv[end])
     if i == nothing
       println("Warning! Reaction not found in MCM database.")
       println(rxn)
       push!(mcmlabel, 0)
     else
-      push!(mcmlabel, mcm[:j][i])
+      push!(mcmlabel, mcm[1][i])
     end
     if j == nothing
       println("Warning! Reaction not found in TUV database.")
       println(rxn)
       push!(tuvlabel, 0)
     else
-      push!(tuvlabel, tuv[:j][j])
+      push!(tuvlabel, tuv[1][j])
     end
   end
 
