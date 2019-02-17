@@ -152,7 +152,7 @@ function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=
     # Search for keyword for start/end of data
     if !isa(headerskip, Number) headerskip = findlast(occursin.(headerskip, lines))  end
     if !isa(footerskip, Number)
-      footerskip = 1 + findfirst(occursin.(footerskip, lines)) - length(lines)
+      footerskip = 1 + length(lines) - findfirst(occursin.(footerskip, lines))
     end
     # delete leading and trailing whitespace
     lines = [replace(str, r"^[ \t]*" => "") for str in lines]
