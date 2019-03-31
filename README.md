@@ -5,7 +5,7 @@ Current versions can read any files with several options to skip leading or
 trailing lines and save data in columns of a `DataFrame`. Numbers can be converted
 into integers or floats. Furthermore, TUV 5.2 files (or versions with the same format)
 can be read and _j_ values saved to a `DataFrame` together with solar zenith angles
-in deg/rad in arrays all stored in a immutable struct `TUVdata`.
+in deg/rad in arrays all stored in an immutable struct `TUVdata`.
 
 The module is designed for Julia v0.7 and higher.
 
@@ -18,8 +18,6 @@ Install in the package manager with:
 ```
 julia> ]
 pkg> add https://github.com/pb866/filehandling.git
-pkg> instantiate
-pkg> precompile
 ```
 
 
@@ -34,6 +32,8 @@ Pkg.activate("path/to/Project.toml")
 using filehandling
 ```
 
+Omit the first 2 steps, if you installed `filehandling` to the main julia environment.
+
 
 ### Function filetest
 
@@ -45,6 +45,8 @@ ifile = filetest(ifile::AbstractString; dir::AbstractString="./")
 where the directory of the file can either be specified as relative or absolute
 path directly in the file name of `ifile` or in a separate keyword argument `dir`.
 
+The function returns a string with the absolute file path or asks for user input, if `ifile` doesn't exist. For non-existing files, an empty string is returned.
+
 
 ### Function readfile
 
@@ -54,10 +56,9 @@ To read from a file use
 content = readfile(ifile::String, headerskip=n, footerskip=m, dir::AbstractString="./")
 ```
 
-where `n` and `m` are the number of line numbers to be excluded at the beginning
+where `n` and `m` are the number of lines to be excluded at the beginning
 end of the file, respectively. The file directory is extracted directly from the
-filename or, alternatively, taken from the keyword argument `dir`.
-The current folder is assumed, if no directory is given.
+filename or, alternatively, taken from the keyword argument `dir` as relative or absolute path.
 
 To test the existence of a file use function `filetest`.
 
@@ -67,6 +68,10 @@ More complex loading of data can be performed with `loadfile`, where data is sto
 in a `DataFrame` with columns from the file data. Numbers and dates are automatically
 converted to their respective types, and default error values can be specified for
 missing or faulty data.
+
+```julia
+content = loadfile(ifile::String; kwargs)
+```
 
 The following keyword arguments are available:
 
@@ -133,10 +138,11 @@ The following keyword arguments are available:
 To read the contents of TUV 5.2 output files use
 
 ```julia
-jvals = readTUV(ifile::String, DU::Number=350, MCMversion::Int64=4)
+jvals = readTUV(ifile::String; dir::String="./", DU::Number=350, MCMversion::Int64=4)
 ```
 
-where `ifile` is the name of the TUV output file and `DU` is the overlying
+where `ifile` is the name of the TUV output file with the absolute or relative folder
+path given in the file name or the keyword argument `dir`. `DU` is the overlying
 ozone column in Dobson units as defined in the TUV run. Data is stored in a immutable
 `struct` `TUVdata`, where the fields `jval` are assigned with a DataFrame
 with the _j_ values for every reaction using the TUV reaction labels as header,
@@ -201,6 +207,15 @@ in TUV.jl.
 
 Version history
 ===============
+
+Version 1.1.0
+-------------
+- Prefer package `import` over `using`
+- Revise kwarg `dir` in all functions to always be combined with the file name,
+  even if the file name already holds folder paths. This allows the combination of
+  `@__DIR__` with relative folder paths scripts.
+- Add kwarg `dir` to function `readTUV`
+- Bug fixes
 
 Version 1.0.0
 -------------
