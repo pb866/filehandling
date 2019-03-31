@@ -18,8 +18,8 @@ module filehandling
 # using Revise
 
 # Load Julia packages
-using DataFrames
-using Dates
+import DataFrames.DataFrame
+import Dates
 
 # Export functions
 export loadfile,
