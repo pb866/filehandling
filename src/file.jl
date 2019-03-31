@@ -10,10 +10,8 @@ Omit first `rmhead` lines and last `rmtail` lines, if keyword arguments are spec
 """
 function readfile(ifile::String; headerskip::Int=0, footerskip::Int=0, dir::AbstractString="./")
 
-  # Add default directory, if folder path in file name is missing
-  fname = basename(ifile); fdir = dirname(ifile)
-  if fdir == ""  fdir = dir  end
-  ifile = normpath(joinpath(fdir,fname))
+  # Combine directory with file
+  ifile = abspath(joinpath(dir,ifile))
 
   lines = []
   # Read lines from file
@@ -43,10 +41,8 @@ directory, if `ifile` does not include a folder path.
 """
 function filetest(ifile::AbstractString; dir::AbstractString="./")
 
-  # Add default directory, if folder path in file name is missing
-  fname = basename(ifile); fdir = dirname(ifile)
-  if fdir == ""  fdir = dir  end
-  ifile = normpath(joinpath(fdir,fname))
+  # Combine directory with file
+  ifile = abspath(joinpath(dir,ifile))
 
   # Test existance of file or ask for user input until file is found
   while !isfile(ifile)
@@ -277,7 +273,7 @@ function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=
         continue
       catch
       end
-      try col = parse.(DateTime, col)
+      try col = parse.(Dates.DateTime, col)
         output[Symbol(colnames[i])] = col
         continue
       catch
@@ -298,10 +294,10 @@ function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=
     SFy isa Vector ? SFax[i] = SFy[i] : SFax[i] = SFy
   end
   for i = 1:ncols
-    if SF[i] ≠ 1 && typeof(output[i]) ≠ Vector{DateTime}
+    if SF[i] ≠ 1 && typeof(output[i]) ≠ Vector{Dates.DateTime}
       output[i] .*= SF[i]
     end
-    if SFax[i] ≠ 1 && typeof(output[i]) ≠ Vector{DateTime}
+    if SFax[i] ≠ 1 && typeof(output[i]) ≠ Vector{Dates.DateTime}
       output[i] .*= SFax[i]
     end
   end
@@ -418,7 +414,7 @@ return the revised vector `col` with conversion failures replaced by `err`.
 """
 function convert_exceptions(col, err)
   # Loop over data types
-  for type in [Int, Float64, DateTime]
+  for type in [Int, Float64, Dates.DateTime]
     revcol = Vector{Any}(undef, length(col)); count = 0
     # Loop over data
     for (i, dat) in enumerate(col)
@@ -429,8 +425,8 @@ function convert_exceptions(col, err)
         # Use different default values for different data types, if err is not defined
         if err == "" && type == Float64
           revcol[i] = NaN
-        elseif err == "" && type == DateTime
-          revcol[i] = DateTime(0)
+        elseif err == "" && type == Dates.DateTime
+          revcol[i] = Dates.DateTime(0)
         else
           revcol[i] = err
         end

@@ -15,8 +15,11 @@ Return immutable struct `TUVdata` with fields `jval`, `order`, `deg`, `rad`, `rx
 in deg/rad, reaction labels, reaction numbers in the MCM and TUV, and ozone column,
 respectively.
 """
-function readTUV(ifile::String; DU::Number=350, MCMversion::Int64=4)
+function readTUV(ifile::String; dir::String="./", DU::Number=350, MCMversion::Int64=4)
 
+  # Test existance of file and combine directory and file name
+  ifile = filetest(ifile, dir = dir)
+  if ifile == ""  return  end
   # Read reactions and j values from input file
   jvals = []; order = []; sza = []; χ = []
   open(ifile,"r") do f
