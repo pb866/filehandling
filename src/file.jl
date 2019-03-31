@@ -36,8 +36,8 @@ end #function readfile
     filetest(ifile::AbstractString; dir::AbstractString="./")
 
 Check for existance of ifile. If file doesn't exist, ask for a file name until
-file is found. If `default_dir` is specified, rdinp will look for `ifile` in this
-directory, if `ifile` does not include a folder path.
+file is found. If `dir` is specified, it is combined with the file name of `ifile`
+and returned as absolute path.
 """
 function filetest(ifile::AbstractString; dir::AbstractString="./")
 
