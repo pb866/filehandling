@@ -1,11 +1,12 @@
 """
-    readTUV(ifile::String, DU::Number=350; MCMversion::Int64=4)
+    readTUV(ifile::String; dir::String="./", DU::Number=350, MCMversion::Int64=4)
 
-Read in data from TUV `ifile` (version 5.2 format) and specify `DU` (ozone column Dobson unit)
-conditions and save χ-dependent _j_ values to dataframe. Specify the MCM version number
-to return the correct MCM reaction labels.
+Read in data from TUV `ifile` (version 5.2 format) in directory `dir` and specify
+`DU` (ozone column Dobson unit) conditions and save χ-dependent _j_ values with
+additional Information as `TUVdata`. Specify the `MCMversion` number to return
+the correct MCM reaction labels.
 
-MCM version numbers:
+`MCMversion` numbers:
 - `2`: MCMv3.2 or older
 - `3`: MCMv3.3.1
 - `4`: MCM/GECKO-A
@@ -14,6 +15,9 @@ Return immutable struct `TUVdata` with fields `jval`, `order`, `deg`, `rad`, `rx
 `mcm`, `tuv`, and `O3col` with _j_ values, order of magnitude, solar zenith angles
 in deg/rad, reaction labels, reaction numbers in the MCM and TUV, and ozone column,
 respectively.
+
+Note: The directory can also be given directly in the file name. `readTUV` combines
+`dir` and `ifile` and turns it into an absolute file path.
 """
 function readTUV(ifile::String; dir::String="./", DU::Number=350, MCMversion::Int64=4)
 
