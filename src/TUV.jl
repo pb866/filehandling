@@ -35,7 +35,6 @@ function readTUV(ifile::String; dir::String="./", DU::Number=350, MCMversion::In
     jvals, order, sza, χ = read_jvals(lines,rxns)
   end
   mcmlabel, tuvlabel = get_photlabel(string.(names(jvals)), MCMversion)
-  if mcmlabel == nothing  return nothing  end
 
   # Return immutable struct with TUV data
   return TUVdata(jvals, order, sza, χ, string.(names(jvals)),
@@ -67,8 +66,7 @@ function read_jvals(lines::Vector{String},rxns::Vector{SubString{String}})
       jvals[Symbol(rxns[i])] = [rawdata[j][i] for j = 1:length(rawdata)]
     else
       # Exclude data without values above 0
-      println("\033[95mReaction with no data skipped:\033[0m")
-      println(rxns[i])
+      @info("\033[96mReaction with no data skipped:\033[0m\n$(rxns[i])")
     end
   end
   # Save solar zenith angles in deg and rad
@@ -99,9 +97,8 @@ function get_photlabel(rxns::Vector{String}, MCMversion::Int64)
   elseif MCMversion == 4
     inpfile = "MCM-GECKO-A.db"
   else
-    println("Unknown option for `MCMversion`. Choose integer between `2` and `4`.")
-    println("Skript stopped.")
-    return nothing, nothing
+    throw(ArgumentError(string("Unknown option for `MCMversion`.\n",
+      "\033[0mChoose integer between `2` and `4`.")))
   end
   mcm = loadfile(inpfile, dir = normpath(joinpath(@__DIR__,"../data")),
     sep = "|", headerskip = 1)
@@ -113,15 +110,13 @@ function get_photlabel(rxns::Vector{String}, MCMversion::Int64)
     i = findfirst(rxn .== mcm[end])
     j = findfirst(rxn .== tuv[end])
     if i == nothing
-      println("Warning! Reaction not found in MCM database.")
-      println(rxn)
+      @warn("\033[93mReaction not found in MCM database.\033[0m\n$rxn")
       push!(mcmlabel, 0)
     else
       push!(mcmlabel, mcm[1][i])
     end
     if j == nothing
-      println("Warning! Reaction not found in TUV database.")
-      println(rxn)
+      @warn("\033[93mReaction not found in TUV database.\033[0m\n$rxn")
       push!(tuvlabel, 0)
     else
       push!(tuvlabel, tuv[1][j])
