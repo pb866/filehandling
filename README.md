@@ -208,6 +208,10 @@ in TUV.jl.
 Version history
 ===============
 
+Version 1.1.1
+-------------
+- Revised exception handling: use `throw()`, `@warn`, and `@info` for errors/warnings
+
 Version 1.1.0
 -------------
 - Prefer package `import` over `using`
