@@ -196,14 +196,14 @@ function loadfile(ifile::String; dir::String=".", x::Union{Int64,Vector{Int64}}=
 
     # Check that length of colnames fits ncols
     if length(colnames) < ncols
-      println("WARNING! Number of column names does not fit ncol;")
-      println("colnames is appended with standard names.")
+      @warn(string("\033[93mNumber of column names does not fit ncol.\033[0m\n",
+        "`colnames` is appended with standard names."))
       for i = length(colnames)+1:ncols
         any(x.==i) ? push!(colnames, "x$i") : push!(colnames, "y$i")
       end
     elseif length(colnames) > ncols
-      println("WARNING! Number of column names does not fit ncol.")
-      println("The last $(length(colnames)-ncols) column names are ignored.")
+      @warn(string("\033[93mNumber of column names does not fit ncol.\033[0m\n",
+        "The last $(length(colnames)-ncols) column names are ignored."))
       colnames = colnames[1:ncols]
     end
 
